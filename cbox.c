@@ -18,7 +18,6 @@ curl --fail --silent --show-error --location "$LXC_INDEX_URL"
 );
 
 const char *cmd_pull = QUOTE(
-
 if [ -d "$CBOX_DATA/$1" ]; then
   echo "cbox: $1 already exists";
   exit 1;
@@ -38,7 +37,6 @@ rm "$CBOX_DATA/$1/etc/resolv.conf";
 touch "$CBOX_DATA/$1/etc/resolv.conf";
 );
 
-
 void fatal(const char* err){
   fprintf(stderr, "cbox: %s\n", err);
   exit(1);
@@ -55,7 +53,7 @@ void usage(){
   exit(1);
 }
 
-void run(const char *cbox_data, const char* name, char** argv){
+void run_box(const char *cbox_data, const char* name, char** argv){
   pl_setup_mount_ns();
 
   char *rootfs = NULL;
@@ -141,7 +139,7 @@ int main(int argc, char* argv[]) {
 
   if (strcmp(argv[1], "run") == 0) {
     if (argc < 4) usage();
-    run(cbox_data, argv[2], argv + 3);
+    run_box(cbox_data, argv[2], argv + 3);
   }
 
   if (strcmp(argv[1], "ls") == 0) {
@@ -181,7 +179,7 @@ int main(int argc, char* argv[]) {
   }
 
   else if (strcmp(argv[1], "do") == 0) {
-    run(cbox_data, "default", argv + 2);
+    run_box(cbox_data, "default", argv + 2);
   }
 
   usage();
