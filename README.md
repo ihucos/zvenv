@@ -18,7 +18,11 @@ cbox do *CMDS                  run in the box named "default"
 
 ## Example
 ```
-
+$ cbox pull ubuntu:focal
+$ cbox cp ubuntu:focal myproject
+$ cbox run myproject apt update
+$ cbox run myproject apt install python-pandas
+$ cbox run myproject python3 myscript.py
 ```
 
 
