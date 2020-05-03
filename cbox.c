@@ -188,7 +188,7 @@ int main(int argc, char* argv[]) {
   else if (strcmp(argv[1], "cp") == 0) {
     if (argc < 4) usage();
     chdir_cbox_data();
-    execlp("cp", "cp", "--", "--reflink=auto", "-r", argv[2], argv[3], NULL);
+    execlp("cp", "cp", "--reflink=auto", "-r", "--", argv[2], argv[3], NULL);
     fatal("execlp");
   }
 
