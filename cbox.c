@@ -12,21 +12,11 @@
 
 #define QUOTE(...) #__VA_ARGS__
 
-const char *cmd_list = QUOTE(
-mkdir -p "$CBOX_DATA";
-ls -1 "$CBOX_DATA";
-);
-
-const char *cmd_rename = QUOTE(
-cd "$CBOX_DATA";
-mv "$1" "$2";
-);
-
-const char *cmd_distros = QUOTE(
+const char *cmd_images = QUOTE(
 curl --fail --silent --show-error --location "$LXC_INDEX_URL" | awk -F";" '$3 == "'"$ARCH"'" && $4 == "default" { print $1":"$2 }' | xargs;
 );
 
-const char *cmd_fetch = QUOTE(
+const char *cmd_pull = QUOTE(
 if [ -d "$CBOX_DATA/$1" ]; then
   echo "cbox: $1 already exists";
   exit 1;
@@ -44,28 +34,10 @@ curl --progress-bar --fail --location "$rootfs" | tar -C "$CBOX_DATA" --one-top-
 );
 
 
-const char *usage = QUOTE(
-usage is here\n
-hyper
-);
-
-//const char *usage = QUOTE(
-//usage:
-//cbox list|ls
-//cbox ls-distros
-//cbox new alpine alpine:3.8
-////cbox link alpine /usr/local/bin/gimp ~/.local/bin/alpine-gimp 
-//cbox remove|rm|del|delete alpine
-//cbox rename alpine myalpine
-//cbox exec alpine bash
-//)
-
-
 void fatal(const char* err){
   fprintf(stderr, "cbox: %s\n", err);
   exit(1);
 }
-
 
 
 void run(char *cbox_data, char* name, char** argv){
@@ -83,12 +55,12 @@ void run(char *cbox_data, char* name, char** argv){
     pl_fatal("chdir");
   }
   
-  pl_bind_mount("/dev",             "./dev");
-  pl_bind_mount("/home",            "./home");
-  pl_bind_mount("/proc",            "./proc");
-  pl_bind_mount("/root",            "./root");
-  pl_bind_mount("/sys",             "./sys");
-  pl_bind_mount("/tmp",             "./tmp");
+  pl_bind_mount("/dev", "./dev");
+  pl_bind_mount("/home", "./home");
+  pl_bind_mount("/proc", "./proc");
+  pl_bind_mount("/root", "./root");
+  pl_bind_mount("/sys", "./sys");
+  pl_bind_mount("/tmp", "./tmp");
   pl_bind_mount("/etc/resolv.conf", "./etc/resolv.conf");
   
   putenv("PATH=" PRESET_PATH);
@@ -103,14 +75,9 @@ void run(char *cbox_data, char* name, char** argv){
   chroot(".") != -1 || pl_fatal("chroot");
   pl_chdir(origpwd);
   
-  /* exec away */
   execvp(argv[0], argv);
   pl_fatal("exec %s", argv[0]);
 
-}
-
-void cbox_usage(){
-  fatal(usage);
 }
 
 void shell(const char* cmd, const char* arg1, const char* arg2){
@@ -118,10 +85,15 @@ void shell(const char* cmd, const char* arg1, const char* arg2){
     pl_fatal("could not execlp");
 }
 
+void init(const char* cbox_data){
+    execlp("mkdir", "mkdir", "-p", cbox_data, NULL);
+    pl_fatal("could not execlp");
+}
+
 
 int main(int argc, char* argv[]) {
   if (argc < 2){
-      cbox_usage();
+      //cbox_usage();
   }
 
   char* cbox_data = "/home/ihucos/.local/lib/cbox";
@@ -132,46 +104,46 @@ int main(int argc, char* argv[]) {
 
   if (getuid()) pl_setup_user_ns();
 
-  if ((strcmp(argv[1], "ls") == 0) ||
-     (strcmp(argv[1], "list") == 0))
-  {
-    shell(cmd_list, NULL, NULL);
+  if (strcmp(argv[1], "exec") == 0) {
+    if (argc < 4){
+        fatal("cbox exec: needs more args");
+    }
+    run(cbox_data, argv[2], argv + 3);
   }
 
-  if ((strcmp(argv[1], "rename") == 0) ||
-     (strcmp(argv[1], "move") == 0) ||
-     (strcmp(argv[1], "mv") == 0))
-  {
+  if (strcmp(argv[1], "ls") == 0) {
+    execlp("ls", "ls", "-1", cbox_data, NULL);
+    pl_fatal("execlp");
+  }
+
+  if (chdir(cbox_data) == -1){
+    pl_fatal("chdir");
+  }
+
+  if (strcmp(argv[1], "mv") == 0) {
     if (argc < 4){
         fatal("cbox mv: needs 2 args");
     }
-    shell(cmd_rename, argv[2], argv[3]);
+    execlp("mv", "mv", argv[2], argv[3], NULL);
+    pl_fatal("execlp");
   }
 
-  if ((strcmp(argv[1], "ls-distros") == 0) ||
-     (strcmp(argv[1], "list-distros") == 0) ||
-     (strcmp(argv[1], "distros") == 0))
-  {
-    shell(cmd_distros, argv[2], argv[3]);
+  if (strcmp(argv[1], "cp") == 0) {
+    if (argc < 4){
+        fatal("cbox mv: needs 2 args");
+    }
+    execlp("cp", "cp", "--reflink=auto", "-r", argv[2], argv[3], NULL);
+    pl_fatal("execlp");
   }
 
-  if ((strcmp(argv[1], "fetch") == 0) ||
-     (strcmp(argv[1], "download") == 0) ||
-     (strcmp(argv[1], "pull") == 0))
-  {
+  if (strcmp(argv[1], "images") == 0) {
+    shell(cmd_images, argv[2], argv[3]);
+  }
+
+  if (strcmp(argv[1], "pull") == 0) {
     if (argc < 3){
         fatal("cbox mv: needs 1 args");
     }
-    shell(cmd_fetch, argv[2], NULL);
-  }
-
-  if ((strcmp(argv[1], "run") == 0) ||
-     (strcmp(argv[1], "execute") == 0) ||
-     (strcmp(argv[1], "exec") == 0))
-  {
-    if (argc < 4){
-        fatal("cbox run: needs more args");
-    }
-    run(cbox_data, argv[2], argv + 3);
+    shell(cmd_pull, argv[2], NULL);
   }
 }
