@@ -16,6 +16,7 @@
 char* cbox_data = NULL;
 
 #define QUOTE(...) #__VA_ARGS__
+#define CMD(a) if (strcmp(argv[1], a) == 0)
 
 const char *cmd_images = QUOTE(
 curl --fail --silent --show-error --location "$LXC_INDEX_URL"
@@ -165,43 +166,43 @@ int main(int argc, char* argv[]) {
     run_box(cbox_data, argv[2], argv + 3);
   }
 
-  if (strcmp(argv[1], "ls") == 0) {
+  CMD("ls") {
     chdir_cbox_data();
     execlp("ls", "ls", "-1", NULL);
     fatal("execlp");
   }
 
-  else if (strcmp(argv[1], "mv") == 0) {
+  CMD("mv") {
     if (argc < 4) usage();
     chdir_cbox_data();
     execlp("mv", "mv", "--", argv[2], argv[3], NULL);
     fatal("execlp");
   }
 
-  else if (strcmp(argv[1], "rm") == 0) {
+  CMD("rm") {
     if (argc < 3) usage();
     chdir_cbox_data();
     execlp("rm", "rm", "-r", "--", argv[2], NULL);
     fatal("execlp");
   }
 
-  else if (strcmp(argv[1], "cp") == 0) {
+  CMD("cp") {
     if (argc < 4) usage();
     chdir_cbox_data();
     execlp("cp", "cp", "--reflink=auto", "-r", "--", argv[2], argv[3], NULL);
     fatal("execlp");
   }
 
-  else if (strcmp(argv[1], "images") == 0) {
+  CMD("images") {
     shell(cmd_images, argv[2], argv[3]);
   }
 
-  else if (strcmp(argv[1], "pull") == 0) {
+  CMD("pull") {
     if (argc < 3 || (strchr(argv[2], ':') == NULL)) usage();
     shell(cmd_pull, argv[2], NULL);
   }
 
-  else if (strcmp(argv[1], "do") == 0) {
+  CMD("do") {
     run_box(cbox_data, "default", argv + 2);
   }
 
