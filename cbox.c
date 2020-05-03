@@ -1,11 +1,11 @@
-
-
 #define _GNU_SOURCE
 #include "errno.h"
 #include "string.h"
+#include "pwd.h"
 #include "stdio.h"
 #include "stdlib.h"
 #include "unistd.h"
+
 #include "plash.h"
 
 #define PRESET_PATH "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
@@ -13,7 +13,8 @@
 #define QUOTE(...) #__VA_ARGS__
 
 const char *cmd_images = QUOTE(
-curl --fail --silent --show-error --location "$LXC_INDEX_URL" | awk -F";" '$3 == "'"$ARCH"'" && $4 == "default" { print $1":"$2 }' | xargs;
+curl --fail --silent --show-error --location "$LXC_INDEX_URL"
+| awk -F";" '$3 == "'"$ARCH"'" && $4 == "default" { print $1":"$2 }'
 );
 
 const char *cmd_pull = QUOTE(
@@ -31,7 +32,10 @@ if [ -z "$match" ]; then
   exit 1;
 fi;
 rootfs="${LXC_HOME_URL}${match}"rootfs.tar.xz;
-curl --progress-bar --fail --location "$rootfs" | tar -C "$CBOX_DATA" --one-top-level="$1" -xJf -;
+mkdir "$CBOX_DATA/$1";
+curl --progress-bar --fail --location "$rootfs" | tar -C "$CBOX_DATA/$1" -xJf -;
+rm "$CBOX_DATA/$1/etc/resolv.conf";
+touch "$CBOX_DATA/$1/etc/resolv.conf";
 );
 
 
@@ -40,12 +44,10 @@ void fatal(const char* err){
   exit(1);
 }
 
-
-
 void usage(){
   fprintf(stderr, "USAGE:\n");
-  fprintf(stderr, "cbox pull DISTRO               downloads a new box\n");
-  fprintf(stderr, "cbox exec BOX *CMDS            run command in box\n");
+  fprintf(stderr, "cbox pull DISTRO:RELEASE       downloads a new box\n");
+  fprintf(stderr, "cbox run BOX *CMDS             run command in box\n");
   fprintf(stderr, "cbox cp SOURCE_BOX NEW_BOX     copy a box\n");
   fprintf(stderr, "cbox images                    list downloadable boxes\n");
   fprintf(stderr, "cbox ls                        list boxes\n");
@@ -53,7 +55,7 @@ void usage(){
   exit(1);
 }
 
-void run(char *cbox_data, char* name, char** argv){
+void run(const char *cbox_data, const char* name, char** argv){
   pl_setup_mount_ns();
 
   char *rootfs = NULL;
@@ -88,10 +90,15 @@ void run(char *cbox_data, char* name, char** argv){
   
   chroot(".") != -1 || pl_fatal("chroot");
   pl_chdir(origpwd);
-  
-  execvp(argv[0], argv);
-  pl_fatal("exec %s", argv[0]);
 
+  pl_exec_add("/bin/sh");
+  pl_exec_add("-lc");
+  pl_exec_add("exec env \"$@\"");
+  pl_exec_add("--");
+  while (argv[0])
+    pl_exec_add((argv++)[0]);
+  pl_exec_add(NULL); // this calls exec
+  pl_fatal("exec %s", argv[0]);
 }
 
 void shell(const char* cmd, const char* arg1, const char* arg2){
@@ -104,13 +111,27 @@ void init(const char* cbox_data){
     pl_fatal("could not execlp");
 }
 
+char* cbox_data = NULL;
+char *init_cbox_data(){
+  struct passwd *pw = getpwuid(getuid());
+  const char *homedir = pw->pw_dir;
+  if (asprintf(&cbox_data, "%s/.local/lib/cbox", homedir) == -1)
+    pl_fatal("asprintf");
+  return cbox_data;
+}
+
+void chdir_cbox_data(){
+  if (chdir(cbox_data) == -1){
+    pl_fatal("chdir");
+  }
+}
 
 int main(int argc, char* argv[]) {
   if (argc < 2){
-      //cbox_usage();
+      usage();
   }
+  init_cbox_data();
 
-  char* cbox_data = "/home/ihucos/.local/lib/cbox";
   putenv("CBOX_DATA=/home/ihucos/.local/lib/cbox"); // XXX hardcoded usersame!
   putenv("LXC_INDEX_URL=https://images.linuxcontainers.org/meta/1.0/index-user");
   putenv("LXC_HOME_URL=https://images.linuxcontainers.org");
@@ -118,28 +139,34 @@ int main(int argc, char* argv[]) {
 
   if (getuid()) pl_setup_user_ns();
 
-  if (strcmp(argv[1], "exec") == 0) {
+  if (strcmp(argv[1], "run") == 0) {
     if (argc < 4) usage();
     run(cbox_data, argv[2], argv + 3);
   }
 
-  if (chdir(cbox_data) == -1){
-    pl_fatal("chdir");
-  }
-
   if (strcmp(argv[1], "ls") == 0) {
+    chdir_cbox_data();
     execlp("ls", "ls", "-1", NULL);
     pl_fatal("execlp");
   }
 
   else if (strcmp(argv[1], "mv") == 0) {
     if (argc < 4) usage();
+    chdir_cbox_data();
     execlp("mv", "mv", "--", argv[2], argv[3], NULL);
+    pl_fatal("execlp");
+  }
+
+  else if (strcmp(argv[1], "rm") == 0) {
+    if (argc < 3) usage();
+    chdir_cbox_data();
+    execlp("rm", "rm", "-r", "--", argv[2], NULL);
     pl_fatal("execlp");
   }
 
   else if (strcmp(argv[1], "cp") == 0) {
     if (argc < 4) usage();
+    chdir_cbox_data();
     execlp("cp", "cp", "--", "--reflink=auto", "-r", argv[2], argv[3], NULL);
     pl_fatal("execlp");
   }
@@ -149,7 +176,7 @@ int main(int argc, char* argv[]) {
   }
 
   else if (strcmp(argv[1], "pull") == 0) {
-    if (argc < 3) usage();
+    if (argc < 3 || (strchr(argv[2], ':') == NULL)) usage();
     shell(cmd_pull, argv[2], NULL);
   }
 
@@ -158,5 +185,4 @@ int main(int argc, char* argv[]) {
   }
 
   usage();
-
 }
