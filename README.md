@@ -1,5 +1,5 @@
 # cbox
-Manage other Linux instances
+Virtualenv for everything
 
 ## Install
 Distributed as a small static binary
