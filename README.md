@@ -23,7 +23,7 @@ cbox do *CMDS                  run in the box named "default"
 
 
 ## A note on arch linux
-
+You need to remove the entry `CheckSpace` in `/etc/pacman.conf`
 
 ## Why?
 
