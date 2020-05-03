@@ -30,6 +30,19 @@ $ cbox run myproject python3 myscript.py
 ## A note on arch linux
 You need to remove the entry `CheckSpace` in `/etc/pacman.conf`
 
-## Why?
+## FAQ
+
+### Why?
 
 Don't dump too much cruft in your root Linux installation, install your dependencies in cbox instances instead.
+
+### Does it run graphical applicaitons?
+Yes.
+
+### Does sound work in other environments?
+No, not out of the box.
+
+### Does it expose binded ports?
+Yes, same network device.
+
+
