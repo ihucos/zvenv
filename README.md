@@ -45,4 +45,6 @@ No, not out of the box.
 ### Does it expose binded ports?
 Yes, same network device.
 
+### Can I still access all my files in /home
+Yes.
 
