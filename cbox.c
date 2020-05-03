@@ -3,12 +3,17 @@
 #include "string.h"
 #include "pwd.h"
 #include "stdio.h"
+#include "stdarg.h"
 #include "stdlib.h"
 #include "unistd.h"
+#include "sys/wait.h"
+#include "sys/types.h"
 
 #include "plash.h"
 
 #define PRESET_PATH "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+char* cbox_data = NULL;
 
 #define QUOTE(...) #__VA_ARGS__
 
@@ -35,21 +40,31 @@ mkdir "$CBOX_DATA/$1";
 curl --progress-bar --fail --location "$rootfs" | tar -C "$CBOX_DATA/$1" -xJf -;
 rm "$CBOX_DATA/$1/etc/resolv.conf";
 touch "$CBOX_DATA/$1/etc/resolv.conf";
+echo "Done";
 );
 
-void fatal(const char* err){
-  fprintf(stderr, "cbox: %s\n", err);
+int fatal(char *format, ...) {
+  va_list args;
+  va_start(args, format);
+  va_end(args);
+  fprintf(stderr, "cbox: ");
+  vfprintf(stderr, format, args);
+  if (errno != 0)
+    fprintf(stderr, ": %s", strerror(errno));
+  fprintf(stderr, "\n");
   exit(1);
 }
 
+
 void usage(){
   fprintf(stderr, "USAGE:\n");
-  fprintf(stderr, "cbox pull DISTRO:RELEASE       downloads a new box\n");
-  fprintf(stderr, "cbox run BOX *CMDS             run command in box\n");
-  fprintf(stderr, "cbox cp SOURCE_BOX NEW_BOX     copy a box\n");
   fprintf(stderr, "cbox images                    list downloadable boxes\n");
+  fprintf(stderr, "cbox pull DISTRO:RELEASE       downloads a new box\n");
+  fprintf(stderr, "cbox run BOX *CMDS             run command in a box\n");
+  fprintf(stderr, "cbox cp SOURCE_BOX NEW_BOX     duplicate a box\n");
   fprintf(stderr, "cbox ls                        list boxes\n");
   fprintf(stderr, "cbox mv OLD_NAME NEW_NAME      rename a box\n");
+  fprintf(stderr, "cbox do *CMDS                  run in the box named \"default\"\n");
   exit(1);
 }
 
@@ -58,15 +73,15 @@ void run_box(const char *cbox_data, const char* name, char** argv){
 
   char *rootfs = NULL;
   if (asprintf(&rootfs, "%s/%s", cbox_data, name) == -1)
-    pl_fatal("asprintf");
+    fatal("asprintf");
 
   char *origpwd = get_current_dir_name();
   if (chdir(rootfs) == -1){
     if (errno == ENOENT){
-      fprintf(stderr, "no such box: %s\n", name);
-      exit(1);
+      errno = 0;
+      fatal("no such box: %s", name);
     }
-    pl_fatal("chdir");
+    fatal("chdir");
   }
   
   pl_bind_mount("/dev", "./dev");
@@ -86,7 +101,7 @@ void run_box(const char *cbox_data, const char* name, char** argv){
   pl_whitelist_envs_from_env("CBOX_EXPORT");
   pl_whitelist_env(NULL);
   
-  chroot(".") != -1 || pl_fatal("chroot");
+  chroot(".") != -1 || fatal("chroot");
   pl_chdir(origpwd);
 
   pl_exec_add("/bin/sh");
@@ -96,31 +111,34 @@ void run_box(const char *cbox_data, const char* name, char** argv){
   while (argv[0])
     pl_exec_add((argv++)[0]);
   pl_exec_add(NULL); // this calls exec
-  pl_fatal("exec %s", argv[0]);
+  fatal("exec %s", argv[0]);
 }
 
 void shell(const char* cmd, const char* arg1, const char* arg2){
     execlp("sh", "sh", "-uec", cmd, "--", arg1, arg2, NULL);
-    pl_fatal("could not execlp");
+    fatal("execlp");
 }
 
-void init(const char* cbox_data){
-    execlp("mkdir", "mkdir", "-p", cbox_data, NULL);
-    pl_fatal("could not execlp");
+void init_data_dir(){
+    if (!fork()){
+      execlp("mkdir", "mkdir", "-p", cbox_data, NULL);
+      fatal("execlp");
+    }
+    int wstatus;
+    wait(&wstatus);
 }
 
-char* cbox_data = NULL;
-char *init_cbox_data(){
+char *init_cbox_data_variable(){
   struct passwd *pw = getpwuid(getuid());
   const char *homedir = pw->pw_dir;
   if (asprintf(&cbox_data, "%s/.local/lib/cbox", homedir) == -1)
-    pl_fatal("asprintf");
+    fatal("asprintf");
   return cbox_data;
 }
 
 void chdir_cbox_data(){
   if (chdir(cbox_data) == -1){
-    pl_fatal("chdir");
+    fatal("chdir");
   }
 }
 
@@ -128,9 +146,14 @@ int main(int argc, char* argv[]) {
   if (argc < 2){
       usage();
   }
-  init_cbox_data();
+  init_cbox_data_variable();
+  init_data_dir();
 
-  putenv("CBOX_DATA=/home/ihucos/.local/lib/cbox"); // XXX hardcoded usersame!
+  char *cbox_data_env = NULL;
+  if (asprintf(&cbox_data_env, "CBOX_DATA=%s", cbox_data) == -1)
+    fatal("asprintf");
+
+  putenv(cbox_data_env);
   putenv("LXC_INDEX_URL=https://images.linuxcontainers.org/meta/1.0/index-user");
   putenv("LXC_HOME_URL=https://images.linuxcontainers.org");
   putenv("ARCH=amd64");
@@ -145,28 +168,28 @@ int main(int argc, char* argv[]) {
   if (strcmp(argv[1], "ls") == 0) {
     chdir_cbox_data();
     execlp("ls", "ls", "-1", NULL);
-    pl_fatal("execlp");
+    fatal("execlp");
   }
 
   else if (strcmp(argv[1], "mv") == 0) {
     if (argc < 4) usage();
     chdir_cbox_data();
     execlp("mv", "mv", "--", argv[2], argv[3], NULL);
-    pl_fatal("execlp");
+    fatal("execlp");
   }
 
   else if (strcmp(argv[1], "rm") == 0) {
     if (argc < 3) usage();
     chdir_cbox_data();
     execlp("rm", "rm", "-r", "--", argv[2], NULL);
-    pl_fatal("execlp");
+    fatal("execlp");
   }
 
   else if (strcmp(argv[1], "cp") == 0) {
     if (argc < 4) usage();
     chdir_cbox_data();
     execlp("cp", "cp", "--", "--reflink=auto", "-r", argv[2], argv[3], NULL);
-    pl_fatal("execlp");
+    fatal("execlp");
   }
 
   else if (strcmp(argv[1], "images") == 0) {
