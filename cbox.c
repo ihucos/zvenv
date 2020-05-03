@@ -44,12 +44,12 @@ void fatal(const char* err){
 
 void usage(){
   fprintf(stderr, "USAGE:\n");
-  fprintf(stderr, "cbox --pull DISTRO               downloads a new box\n");
-  fprintf(stderr, "cbox --exec BOX *CMDS            run command in box\n");
-  fprintf(stderr, "cbox --cp SOURCE_BOX NEW_BOX     copy a box\n");
-  fprintf(stderr, "cbox --images                    list downloadable boxes\n");
-  fprintf(stderr, "cbox --ls                        list boxes\n");
-  fprintf(stderr, "cbox --mv OLD_NAME NEW_NAME      rename a box\n");
+  fprintf(stderr, "cbox pull DISTRO               downloads a new box\n");
+  fprintf(stderr, "cbox exec BOX *CMDS            run command in box\n");
+  fprintf(stderr, "cbox cp SOURCE_BOX NEW_BOX     copy a box\n");
+  fprintf(stderr, "cbox images                    list downloadable boxes\n");
+  fprintf(stderr, "cbox ls                        list boxes\n");
+  fprintf(stderr, "cbox mv OLD_NAME NEW_NAME      rename a box\n");
   exit(1);
 }
 
@@ -63,7 +63,8 @@ void run(char *cbox_data, char* name, char** argv){
   char *origpwd = get_current_dir_name();
   if (chdir(rootfs) == -1){
     if (errno == ENOENT){
-      fatal("no such box");
+      fprintf(stderr, "no such box: %s\n", name);
+      exit(1);
     }
     pl_fatal("chdir");
   }
@@ -117,7 +118,7 @@ int main(int argc, char* argv[]) {
 
   if (getuid()) pl_setup_user_ns();
 
-  if (strcmp(argv[1], "--exec") == 0) {
+  if (strcmp(argv[1], "exec") == 0) {
     if (argc < 4) usage();
     run(cbox_data, argv[2], argv + 3);
   }
@@ -126,31 +127,36 @@ int main(int argc, char* argv[]) {
     pl_fatal("chdir");
   }
 
-  if (strcmp(argv[1], "--ls") == 0) {
+  if (strcmp(argv[1], "ls") == 0) {
     execlp("ls", "ls", "-1", NULL);
     pl_fatal("execlp");
   }
 
-  else if (strcmp(argv[1], "--mv") == 0) {
+  else if (strcmp(argv[1], "mv") == 0) {
     if (argc < 4) usage();
     execlp("mv", "mv", "--", argv[2], argv[3], NULL);
     pl_fatal("execlp");
   }
 
-  else if (strcmp(argv[1], "--cp") == 0) {
+  else if (strcmp(argv[1], "cp") == 0) {
     if (argc < 4) usage();
     execlp("cp", "cp", "--", "--reflink=auto", "-r", argv[2], argv[3], NULL);
     pl_fatal("execlp");
   }
 
-  else if (strcmp(argv[1], "--images") == 0) {
+  else if (strcmp(argv[1], "images") == 0) {
     shell(cmd_images, argv[2], argv[3]);
   }
 
-  else if (strcmp(argv[1], "--pull") == 0) {
+  else if (strcmp(argv[1], "pull") == 0) {
     if (argc < 3) usage();
     shell(cmd_pull, argv[2], NULL);
   }
 
+  else if (strcmp(argv[1], "do") == 0) {
+    run(cbox_data, "default", argv + 2);
+  }
+
   usage();
+
 }
