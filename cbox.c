@@ -17,6 +17,7 @@ curl --fail --silent --show-error --location "$LXC_INDEX_URL" | awk -F";" '$3 ==
 );
 
 const char *cmd_pull = QUOTE(
+
 if [ -d "$CBOX_DATA/$1" ]; then
   echo "cbox: $1 already exists";
   exit 1;
@@ -39,6 +40,18 @@ void fatal(const char* err){
   exit(1);
 }
 
+
+
+void usage(){
+  fprintf(stderr, "USAGE:\n");
+  fprintf(stderr, "cbox --pull DISTRO               downloads a new box\n");
+  fprintf(stderr, "cbox --exec BOX *CMDS            run command in box\n");
+  fprintf(stderr, "cbox --cp SOURCE_BOX NEW_BOX     copy a box\n");
+  fprintf(stderr, "cbox --images                    list downloadable boxes\n");
+  fprintf(stderr, "cbox --ls                        list boxes\n");
+  fprintf(stderr, "cbox --mv OLD_NAME NEW_NAME      rename a box\n");
+  exit(1);
+}
 
 void run(char *cbox_data, char* name, char** argv){
   pl_setup_mount_ns();
@@ -104,46 +117,40 @@ int main(int argc, char* argv[]) {
 
   if (getuid()) pl_setup_user_ns();
 
-  if (strcmp(argv[1], "exec") == 0) {
-    if (argc < 4){
-        fatal("cbox exec: needs more args");
-    }
+  if (strcmp(argv[1], "--exec") == 0) {
+    if (argc < 4) usage();
     run(cbox_data, argv[2], argv + 3);
-  }
-
-  if (strcmp(argv[1], "ls") == 0) {
-    execlp("ls", "ls", "-1", cbox_data, NULL);
-    pl_fatal("execlp");
   }
 
   if (chdir(cbox_data) == -1){
     pl_fatal("chdir");
   }
 
-  if (strcmp(argv[1], "mv") == 0) {
-    if (argc < 4){
-        fatal("cbox mv: needs 2 args");
-    }
-    execlp("mv", "mv", argv[2], argv[3], NULL);
+  if (strcmp(argv[1], "--ls") == 0) {
+    execlp("ls", "ls", "-1", NULL);
     pl_fatal("execlp");
   }
 
-  if (strcmp(argv[1], "cp") == 0) {
-    if (argc < 4){
-        fatal("cbox mv: needs 2 args");
-    }
-    execlp("cp", "cp", "--reflink=auto", "-r", argv[2], argv[3], NULL);
+  else if (strcmp(argv[1], "--mv") == 0) {
+    if (argc < 4) usage();
+    execlp("mv", "mv", "--", argv[2], argv[3], NULL);
     pl_fatal("execlp");
   }
 
-  if (strcmp(argv[1], "images") == 0) {
+  else if (strcmp(argv[1], "--cp") == 0) {
+    if (argc < 4) usage();
+    execlp("cp", "cp", "--", "--reflink=auto", "-r", argv[2], argv[3], NULL);
+    pl_fatal("execlp");
+  }
+
+  else if (strcmp(argv[1], "--images") == 0) {
     shell(cmd_images, argv[2], argv[3]);
   }
 
-  if (strcmp(argv[1], "pull") == 0) {
-    if (argc < 3){
-        fatal("cbox mv: needs 1 args");
-    }
+  else if (strcmp(argv[1], "--pull") == 0) {
+    if (argc < 3) usage();
     shell(cmd_pull, argv[2], NULL);
   }
+
+  usage();
 }
