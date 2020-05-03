@@ -22,6 +22,7 @@ $ cbox pull ubuntu:focal
 $ cbox cp ubuntu:focal myproject
 $ cbox run myproject apt update
 $ cbox run myproject apt install python-pandas
+$ ... manage other dependencies here
 $ cbox run myproject python3 myscript.py
 ```
 
