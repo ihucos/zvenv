@@ -36,10 +36,10 @@ You need to remove the entry `CheckSpace` in `/etc/pacman.conf`
 
 Don't dump too much cruft in your root Linux installation, install your dependencies in cbox instances instead.
 
-### Does it run graphical applicaitons?
+### Does it run graphical applications?
 Yes.
 
-### Does sound work in other environments?
+### Does sound work in other cenvs?
 No, not out of the box.
 
 ### Does it expose binded ports?
