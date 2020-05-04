@@ -2,7 +2,7 @@
 Virtualenv for everything
 
 ## Install
-Distributed as a small (68 Klobytes) static binary.
+Distributed as a small (68 Kilobytes) static binary.
 
 ## Usage
 ```
