@@ -1,5 +1,5 @@
 # zvenv
-Virtualenv for everything
+Virtualenv for everything.
 
 ## Install
 Distributed as a small (68 Kilobytes) static binary.
