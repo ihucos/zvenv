@@ -1,4 +1,4 @@
-# cbox
+# zvenv
 Virtualenv for everything
 
 ## Install
@@ -7,23 +7,23 @@ Distributed as a small static binary
 ## Usage
 ```
 USAGE:
-cbox images                    list downloadable boxes
-cbox pull DISTRO:RELEASE       downloads a new box
-cbox run BOX *CMDS             run command in a box
-cbox cp SOURCE_BOX NEW_BOX     duplicate a box
-cbox ls                        list boxes
-cbox mv OLD_NAME NEW_NAME      rename a box
-cbox do *CMDS                  run in the box named "default"
+zvenv images                    list downloadable boxes
+zvenv pull DISTRO:RELEASE       downloads a new box
+zvenv run BOX *CMDS             run command in a box
+zvenv cp SOURCE_BOX NEW_BOX     duplicate a box
+zvenv ls                        list boxes
+zvenv mv OLD_NAME NEW_NAME      rename a box
+zvenv do *CMDS                  run in the box named "default"
 ```
 
 ## Example
 ```
-$ cbox pull ubuntu:focal
-$ cbox cp ubuntu:focal myproject
-$ cbox run myproject apt update
-$ cbox run myproject apt install python-pandas
+$ zvenv pull ubuntu:focal
+$ zvenv cp ubuntu:focal myproject
+$ zvenv run myproject apt update
+$ zvenv run myproject apt install python-pandas
 $ ... manage other dependencies here
-$ cbox run myproject python3 myscript.py
+$ zvenv run myproject python3 myscript.py
 ```
 
 
@@ -34,12 +34,12 @@ You need to remove the entry `CheckSpace` in `/etc/pacman.conf`
 
 ### Why?
 
-Don't dump too much cruft in your root Linux installation, install your dependencies in cbox instances instead.
+Don't dump too much cruft in your root Linux installation, install your dependencies in zvenv instances instead.
 
 ### Does it run graphical applications?
 Yes.
 
-### Does sound work in other cenvs?
+### Does sound work inside the virtualenvs?
 No, not out of the box.
 
 ### Does it expose binded ports?
