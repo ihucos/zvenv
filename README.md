@@ -26,6 +26,10 @@ $ ... manage other dependencies here
 $ zvenv run myproject python3 myscript.py
 ```
 
+## Incomplete lists of supported distributions
+alpine, archlinux, centos, debian, ubuntu
+
+
 
 ## A note on arch linux
 You need to remove the entry `CheckSpace` in `/etc/pacman.conf`
