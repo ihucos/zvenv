@@ -27,7 +27,7 @@ $ ... manage other dependencies here
 $ zvenv run myproject python3 myscript.py
 ```
 
-## Some supported distributions
+## Some supported distributions as virtualenvs
 alpine, archlinux, centos, debian, ubuntu
 
 
