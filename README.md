@@ -48,3 +48,5 @@ Yes, same network device.
 ### Can I still access all my files in /home
 Yes.
 
+### Are reflinks supported?
+Yes, when the filesystem supports that.
