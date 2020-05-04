@@ -32,7 +32,7 @@ alpine, archlinux, centos, debian, ubuntu
 
 
 
-## A note on arch linux
+## A note on arch linux virtualenvs
 You need to remove the entry `CheckSpace` in `/etc/pacman.conf`
 
 ## FAQ
