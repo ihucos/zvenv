@@ -2,7 +2,7 @@
 Virtualenv for everything
 
 ## Install
-Distributed as a small static binary
+Distributed as a small (68K) static binary.
 
 ## Usage
 ```
