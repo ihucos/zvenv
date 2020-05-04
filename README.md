@@ -9,8 +9,8 @@ Distributed as a small (68 Kilobytes) static binary.
 USAGE:
 zvenv images                    list downloadable virtualenvs
 zvenv pull DISTRO:RELEASE       downloads a virtualenv
-zvenv run BOX *CMDS             run command in virtualenv
-zvenv cp SOURCE_BOX NEW_BOX     duplicates a virtualenv
+zvenv run VENV *CMDS            run command in virtualenv
+zvenv cp SOURCE_VENV NEW_VENV   duplicates a virtualenv
 zvenv ls                        list virtualenvs
 zvenv mv OLD_NAME NEW_NAME      rename a virtualenv
 zvenv do *CMDS                  run in the virtualenv named "default"
