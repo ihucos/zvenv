@@ -13,6 +13,7 @@ zvenv run VENV *CMDS            run command in virtualenv
 zvenv cp SOURCE_VENV NEW_VENV   duplicates a virtualenv
 zvenv ls                        list virtualenvs
 zvenv mv OLD_NAME NEW_NAME      rename a virtualenv
+zvenv rm VENV                   remove a virtualenv
 zvenv do *CMDS                  run in the virtualenv named "default"
 ```
 
