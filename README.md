@@ -1,5 +1,5 @@
 # zvenv
-Virtualenv for everything
+Virtualenv for everything.
 
 ## Install
 Distributed as a small (68 Kilobytes) static binary.
@@ -9,10 +9,11 @@ Distributed as a small (68 Kilobytes) static binary.
 USAGE:
 zvenv images                    list downloadable virtualenvs
 zvenv pull DISTRO:RELEASE       downloads a virtualenv
-zvenv run BOX *CMDS             run command in virtualenv
-zvenv cp SOURCE_BOX NEW_BOX     duplicates a virtualenv
+zvenv run VENV *CMDS            run command in virtualenv
+zvenv cp SOURCE_VENV NEW_VENV   duplicates a virtualenv
 zvenv ls                        list virtualenvs
 zvenv mv OLD_NAME NEW_NAME      rename a virtualenv
+zvenv rm VENV                   remove a virtualenv
 zvenv do *CMDS                  run in the virtualenv named "default"
 ```
 
@@ -26,8 +27,12 @@ $ ... manage other dependencies here
 $ zvenv run myproject python3 myscript.py
 ```
 
+## Some supported distributions
+alpine, archlinux, centos, debian, ubuntu
 
-## A note on arch linux
+
+
+## A note on arch linux virtualenvs
 You need to remove the entry `CheckSpace` in `/etc/pacman.conf`
 
 ## FAQ
