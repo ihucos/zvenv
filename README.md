@@ -7,13 +7,13 @@ Distributed as a small static binary
 ## Usage
 ```
 USAGE:
-zvenv images                    list downloadable boxes
-zvenv pull DISTRO:RELEASE       downloads a new box
-zvenv run BOX *CMDS             run command in a box
-zvenv cp SOURCE_BOX NEW_BOX     duplicate a box
-zvenv ls                        list boxes
-zvenv mv OLD_NAME NEW_NAME      rename a box
-zvenv do *CMDS                  run in the box named "default"
+zvenv images                    list downloadable virtualenvs
+zvenv pull DISTRO:RELEASE       downloads a virtualenv
+zvenv run BOX *CMDS             run command in virtualenv
+zvenv cp SOURCE_BOX NEW_BOX     duplicates a virtualenv
+zvenv ls                        list virtualenvs
+zvenv mv OLD_NAME NEW_NAME      rename a virtualenv
+zvenv do *CMDS                  run in the virtualenv named "default"
 ```
 
 ## Example

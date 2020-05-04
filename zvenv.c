@@ -59,17 +59,17 @@ int fatal(char *format, ...) {
 
 void usage(){
   fprintf(stderr, "USAGE:\n");
-  fprintf(stderr, "zvenv images                    list downloadable boxes\n");
-  fprintf(stderr, "zvenv pull DISTRO:RELEASE       downloads a new box\n");
-  fprintf(stderr, "zvenv run BOX *CMDS             run command in a box\n");
-  fprintf(stderr, "zvenv cp SOURCE_BOX NEW_BOX     duplicate a box\n");
-  fprintf(stderr, "zvenv ls                        list boxes\n");
-  fprintf(stderr, "zvenv mv OLD_NAME NEW_NAME      rename a box\n");
-  fprintf(stderr, "zvenv do *CMDS                  run in the box named \"default\"\n");
+  fprintf(stderr, "zvenv images                    list downloadable virtualenvs\n");
+  fprintf(stderr, "zvenv pull DISTRO:RELEASE       downloads a virtualenv\n");
+  fprintf(stderr, "zvenv run BOX *CMDS             run command in virtualenv\n");
+  fprintf(stderr, "zvenv cp SOURCE_BOX NEW_BOX     duplicates a virtualenv\n");
+  fprintf(stderr, "zvenv ls                        list virtualenvs\n");
+  fprintf(stderr, "zvenv mv OLD_NAME NEW_NAME      rename a virtualenv\n");
+  fprintf(stderr, "zvenv do *CMDS                  run in the virtualenv named \"default\"\n");
   exit(1);
 }
 
-void run_box(const char *zvenv_data, const char* name, char** argv){
+void run_virtualenv(const char *zvenv_data, const char* name, char** argv){
   pl_setup_mount_ns();
 
   char *rootfs = NULL;
@@ -80,7 +80,7 @@ void run_box(const char *zvenv_data, const char* name, char** argv){
   if (chdir(rootfs) == -1){
     if (errno == ENOENT){
       errno = 0;
-      fatal("no such box: %s", name);
+      fatal("no such virtualenv: %s", name);
     }
     fatal("chdir");
   }
@@ -163,7 +163,7 @@ int main(int argc, char* argv[]) {
 
   if (strcmp(argv[1], "run") == 0) {
     if (argc < 4) usage();
-    run_box(zvenv_data, argv[2], argv + 3);
+    run_virtualenv(zvenv_data, argv[2], argv + 3);
   }
 
   CMD("ls") {
@@ -203,7 +203,7 @@ int main(int argc, char* argv[]) {
   }
 
   CMD("do") {
-    run_box(zvenv_data, "default", argv + 2);
+    run_virtualenv(zvenv_data, "default", argv + 2);
   }
 
   usage();
