@@ -2,10 +2,10 @@ PLASH_LIB=../plash/lib
 CC=musl-gcc
 CFLAGS=-static -I$(PLASH_LIB)
 
-all: cbox
+all: zvenv
 
-cbox: cbox.c
-	$(CC) $(CFLAGS) -o cbox cbox.c $(PLASH_LIB)/plash.c
+zvenv: zvenv.c
+	$(CC) $(CFLAGS) -o zvenv zvenv.c $(PLASH_LIB)/plash.c
 
 clean:
-	rm cbox
+	rm zvenv
