@@ -34,7 +34,7 @@ You need to remove the entry `CheckSpace` in `/etc/pacman.conf`
 
 ### Why?
 
-Don't dump too much cruft in your root Linux installation, install your dependencies in zvenv instances instead.
+Don't dump too much cruft in your root Linux installation, install your dependencies in zvenv virtualenvs instead.
 
 ### Does it run graphical applications?
 Yes.
