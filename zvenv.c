@@ -65,6 +65,7 @@ void usage(){
   fprintf(stderr, "zvenv cp SOURCE_VENV NEW_VENV   duplicates a virtualenv\n");
   fprintf(stderr, "zvenv ls                        list virtualenvs\n");
   fprintf(stderr, "zvenv mv OLD_NAME NEW_NAME      rename a virtualenv\n");
+  fprintf(stderr, "zvenv rm VENV                   remove a virtualenv\n");
   fprintf(stderr, "zvenv do *CMDS                  run in the virtualenv named \"default\"\n");
   exit(1);
 }
@@ -161,7 +162,7 @@ int main(int argc, char* argv[]) {
 
   if (getuid()) pl_setup_user_ns();
 
-  if (strcmp(argv[1], "run") == 0) {
+  CMD("run") {
     if (argc < 4) usage();
     run_virtualenv(zvenv_data, argv[2], argv + 3);
   }
