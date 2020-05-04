@@ -24,7 +24,7 @@ curl --fail --silent --show-error --location "$LXC_INDEX_URL"
 );
 
 const char *cmd_pull = QUOTE(
-if [ -d "$CBOX_DATA/$1" ]; then
+if [ -d "$ZVENV_DATA/$1" ]; then
   echo "zvenv: $1 already exists";
   exit 1;
 fi;
@@ -37,10 +37,10 @@ if [ -z "$match" ]; then
   exit 1;
 fi;
 rootfs="${LXC_HOME_URL}${match}"rootfs.tar.xz;
-mkdir "$CBOX_DATA/$1";
-curl --progress-bar --fail --location "$rootfs" | tar -C "$CBOX_DATA/$1" -xJf -;
-rm "$CBOX_DATA/$1/etc/resolv.conf";
-touch "$CBOX_DATA/$1/etc/resolv.conf";
+mkdir "$ZVENV_DATA/$1";
+curl --progress-bar --fail --location "$rootfs" | tar -C "$ZVENV_DATA/$1" -xJf -;
+rm "$ZVENV_DATA/$1/etc/resolv.conf";
+touch "$ZVENV_DATA/$1/etc/resolv.conf";
 echo "Done";
 );
 
@@ -61,8 +61,8 @@ void usage(){
   fprintf(stderr, "USAGE:\n");
   fprintf(stderr, "zvenv images                    list downloadable virtualenvs\n");
   fprintf(stderr, "zvenv pull DISTRO:RELEASE       downloads a virtualenv\n");
-  fprintf(stderr, "zvenv run BOX *CMDS             run command in virtualenv\n");
-  fprintf(stderr, "zvenv cp SOURCE_BOX NEW_BOX     duplicates a virtualenv\n");
+  fprintf(stderr, "zvenv run VENV *CMDS            run command in virtualenv\n");
+  fprintf(stderr, "zvenv cp SOURCE_VENV NEW_VENV   duplicates a virtualenv\n");
   fprintf(stderr, "zvenv ls                        list virtualenvs\n");
   fprintf(stderr, "zvenv mv OLD_NAME NEW_NAME      rename a virtualenv\n");
   fprintf(stderr, "zvenv do *CMDS                  run in the virtualenv named \"default\"\n");
@@ -99,7 +99,7 @@ void run_virtualenv(const char *zvenv_data, const char* name, char** argv){
   pl_whitelist_env("HOME");
   pl_whitelist_env("PATH");
   pl_whitelist_envs_from_env("PLASH_EXPORT");
-  pl_whitelist_envs_from_env("CBOX_EXPORT");
+  pl_whitelist_envs_from_env("ZVENV_EXPORT");
   pl_whitelist_env(NULL);
   
   chroot(".") != -1 || fatal("chroot");
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
   init_data_dir();
 
   char *zvenv_data_env = NULL;
-  if (asprintf(&zvenv_data_env, "CBOX_DATA=%s", zvenv_data) == -1)
+  if (asprintf(&zvenv_data_env, "ZVENV_DATA=%s", zvenv_data) == -1)
     fatal("asprintf");
 
   putenv(zvenv_data_env);
